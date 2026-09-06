@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#080d1a">
+  <title>Runebound | The Dragon's Trail</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="site-shell">
+    <header class="topbar">
+      <a class="brand" href="#game" aria-label="Runebound home"><span class="brand-mark" aria-hidden="true">✦</span><span><strong>RUN<span>EB</span>OUND</strong><small>THE DRAGON'S TRAIL</small></span></a>
+      <div class="header-actions"><span class="online-dot"><i></i> ARCANE LINK ONLINE</span><button class="icon-button" id="mute-button" type="button" aria-label="Mute magic sounds" title="Toggle sound">♫</button></div>
+    </header>
+    <main id="game" class="game-layout">
+      <section class="intro-panel"><p class="eyebrow">CHAPTER I <span></span> THE GLOWING GROVE</p><h1>Awaken the<br><em>wyrm.</em></h1><p class="intro-copy">Guide your dragon through the enchanted wilds. Gather arcane orbs, unlock ancient power, and let the forest remember your name.</p><div class="rule"></div><div class="legend"><div><span class="legend-swatch orb-swatch"></span><div><strong>ARCANE ORB</strong><small>+10 points</small></div></div><div><span class="legend-swatch rune-swatch">+</span><div><strong>POWER RUNE</strong><small>Every 5 orbs</small></div></div></div><p class="quote">“The oldest magic is motion.” <span>— The Verdant Codex</span></p></section>
+      <section class="game-panel" aria-label="Runebound game"><div class="hud-row"><div class="stat-block"><span class="stat-label">CURRENT SCORE</span><strong id="score">0000</strong></div><div class="stat-block centered"><span class="stat-label">BEST RUN</span><strong id="high-score">0000</strong></div><div class="stat-block right"><span class="stat-label">DANGER LEVEL</span><strong id="difficulty">I <small>CALM</small></strong></div></div><div class="canvas-wrap" id="canvas-wrap"><canvas id="game-canvas" width="640" height="640" aria-label="Snake game board"></canvas><div class="canvas-vignette"></div><div class="game-overlay" id="game-overlay"><div class="overlay-rune">✦</div><p class="overlay-kicker" id="overlay-kicker">THE GROVE AWAITS</p><h2 id="overlay-title">Begin your quest</h2><p id="overlay-message">Move with the arrow keys or WASD.<br>Swipe on touch screens.</p><button class="primary-button" id="start-button" type="button"><span>✦</span> Start game</button></div></div><div class="game-footer"><div class="power-status"><span class="status-orb"></span><span id="power-status">NO ACTIVE SPELL</span></div><div class="controls-hint"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd><span>or arrow keys</span></div></div></section>
+      <aside class="side-panel"><div class="side-section"><div class="section-heading"><span>01</span><h3>Dragon's state</h3></div><div class="dragon-card"><div class="dragon-glyph">◈</div><div><strong>EMBERWING</strong><small>Wyrmling class · Level <span id="level">01</span></small></div><span class="pulse-dot"></span></div><div class="meter-label"><span>ARCANE RESONANCE</span><span id="resonance-value">0%</span></div><div class="meter"><i id="resonance-bar"></i></div></div><div class="side-section spells-section"><div class="section-heading"><span>02</span><h3>Found spells</h3></div><div class="spell-list"><div class="spell locked"><span class="spell-icon">◌</span><div><strong>VELOCITY</strong><small>Speed boost · 8 sec</small></div><b>LOCKED</b></div><div class="spell locked"><span class="spell-icon">◒</span><div><strong>STASIS</strong><small>Slow motion · 8 sec</small></div><b>LOCKED</b></div><div class="spell locked"><span class="spell-icon">◇</span><div><strong>WARD</strong><small>Shield one collision</small></div><b>LOCKED</b></div><div class="spell locked"><span class="spell-icon">✧</span><div><strong>GOLDEN AGE</strong><small>2× score · 8 sec</small></div><b>LOCKED</b></div></div></div><div class="side-section how-section"><div class="section-heading"><span>03</span><h3>Field notes</h3></div><p>Orbs manifest beyond the dragon's trail. Avoid the grove's edge and your own shadow.</p><div class="tip"><span>✦</span><p>Collect <strong>5 orbs</strong> to awaken a random spell rune.</p></div></div></aside>
+    </main>
+    <footer class="page-footer"><span>RUNEB0UND ARCHIVES · 2026</span><span>BEST EXPERIENCED WITH SOUND</span></footer>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
