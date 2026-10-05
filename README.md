@@ -184,7 +184,7 @@ Then open **http://localhost:8080** in your browser.
 
 ### Deploy to GitHub Pages
 
-The included GitHub Actions workflow publishes the static game from the `main` branch. In the repository's **Settings → Pages**, set the build and deployment source to **GitHub Actions**. Push to `main` or run the workflow manually from the **Actions** tab.
+In the repository's **Settings → Pages**, select **Deploy from a branch**, then choose `main` and the `/ (root)` folder. GitHub Pages publishes the static game whenever changes are pushed to `main`.
 
 ### Browser compatibility
 
