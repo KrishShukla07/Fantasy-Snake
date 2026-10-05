@@ -36,14 +36,22 @@
     { text: 'Score 150 points', target: 150, type: 'score' },
   ];
 
+  function readStorage(key, fallback = '') {
+    try { return localStorage.getItem(key) ?? fallback; } catch { return fallback; }
+  }
+
+  function writeStorage(key, value) {
+    try { localStorage.setItem(key, value); } catch {}
+  }
+
   let savedProfile = {};
-  try { savedProfile = JSON.parse(localStorage.getItem('runebound-profile') || '{}') || {}; } catch { localStorage.removeItem('runebound-profile'); }
+  try { savedProfile = JSON.parse(readStorage('runebound-profile', '{}')) || {}; } catch { savedProfile = {}; }
   const profile = {
-    totalOrbs: savedProfile.totalOrbs || 0,
-    missionIndex: savedProfile.missionIndex || 0,
-    missionProgress: savedProfile.missionProgress || 0,
-    unlockedSkins: savedProfile.unlockedSkins || ['ember'],
-    skin: savedProfile.skin || 'ember',
+    totalOrbs: Number.isFinite(savedProfile.totalOrbs) && savedProfile.totalOrbs >= 0 ? savedProfile.totalOrbs : 0,
+    missionIndex: Number.isInteger(savedProfile.missionIndex) && savedProfile.missionIndex >= 0 && savedProfile.missionIndex < missionCatalog.length ? savedProfile.missionIndex : 0,
+    missionProgress: Number.isFinite(savedProfile.missionProgress) && savedProfile.missionProgress >= 0 ? savedProfile.missionProgress : 0,
+    unlockedSkins: Array.isArray(savedProfile.unlockedSkins) ? savedProfile.unlockedSkins : ['ember'],
+    skin: ['ember', 'frost', 'storm', 'void'].includes(savedProfile.skin) ? savedProfile.skin : 'ember',
   };
 
   let snake;
@@ -58,7 +66,7 @@
   let worldStage = 0;
   let score;
   let sessionOrbs = 0; // FIX: track per-run orbs separately from mission progress
-  let highScore = Number(localStorage.getItem('runebound-high-score')) || 0;
+  let highScore = Math.max(0, Number(readStorage('runebound-high-score', '0')) || 0);
   let state = 'ready';
   let lastStep = 0;
   let lastSecond = 0;
@@ -75,10 +83,10 @@
   let touchStart = null;
   // FIX: don't clamp speedScale on load — valid stored values are .68 and .82, which are < 0.9
   const validSpeeds = [1, 0.82, 0.68];
-  let speedScale = validSpeeds.includes(Number(localStorage.getItem('runebound-speed-scale')))
-    ? Number(localStorage.getItem('runebound-speed-scale'))
+  let speedScale = validSpeeds.includes(Number(readStorage('runebound-speed-scale', '1')))
+    ? Number(readStorage('runebound-speed-scale', '1'))
     : 1;
-  let endlessMode = localStorage.getItem('runebound-endless-mode') === 'true';
+  let endlessMode = readStorage('runebound-endless-mode') === 'true';
   let lives = 3;
   let combo = 0;
   let comboTimer = 0;
@@ -155,7 +163,7 @@
 
   function announce(message) { liveRegion.textContent = ''; requestAnimationFrame(() => { liveRegion.textContent = message; }); }
   // FIX: debounce profile saves — only write to localStorage when something actually changed
-  function scheduleSave() { if (!profileSavePending) { profileSavePending = true; setTimeout(() => { localStorage.setItem('runebound-profile', JSON.stringify(profile)); profileSavePending = false; }, 500); } }
+  function scheduleSave() { if (!profileSavePending) { profileSavePending = true; setTimeout(() => { writeStorage('runebound-profile', JSON.stringify(profile)); profileSavePending = false; }, 500); } }
 
   // FIX: update skin dropdown options reactively so newly earned skins unlock without a page reload
   function updateSkinOptions() {
@@ -271,7 +279,7 @@
     stopMusic();
     if (audioContext) audioContext.suspend(); // FIX: release audio resources on game over
     playTone(110, .32, 'sawtooth');
-    if (score > highScore) { highScore = score; localStorage.setItem('runebound-high-score', String(highScore)); }
+    if (score > highScore) { highScore = score; writeStorage('runebound-high-score', String(highScore)); }
     overlayKicker.textContent = 'THE TRAIL ENDS HERE';
     overlayTitle.textContent = 'The grove claims you';
     // FIX: show sessionOrbs (orbs this run) instead of missionProgress
@@ -312,8 +320,9 @@
   // two-key reversal when inputs arrive in the same tick
   function requestDirection(next) {
     if (state !== 'playing') return;
-    const ref = nextDirection; // compare against queued direction, not committed one
-    const opposite = vectors[ref].x + vectors[next].x === 0 && vectors[ref].y + vectors[next].y === 0;
+    const current = vectors[direction];
+    const requested = vectors[next];
+    const opposite = current.x + requested.x === 0 && current.y + requested.y === 0;
     if (!opposite) nextDirection = next;
   }
 
@@ -357,7 +366,12 @@
 
     // FIX: ghost power bypasses both self-collision AND wall-cell collision
     const hitWall = activePower !== 'ghost' && !endlessMode && isWallCell(head.x, head.y);
-    const hitSelf = activePower !== 'ghost' && snake.some((part, index) => index > 0 && part.x === head.x && part.y === head.y);
+    const eatingFood = food && head.x === food.x && head.y === food.y;
+    const tailMoves = !eatingFood && pendingGrowth === 0;
+    const hitSelf = activePower !== 'ghost' && snake.some((part, index) => {
+      const tailIsLeaving = tailMoves && index === snake.length - 1;
+      return !tailIsLeaving && index > 0 && part.x === head.x && part.y === head.y;
+    });
     const hitHazard = hazard && head.x === hazard.x && head.y === hazard.y;
     const hitPortal = portal && head.x === portal.x && head.y === portal.y;
 
@@ -381,7 +395,7 @@
 
     snake.unshift(head);
 
-    if (head.x === food.x && head.y === food.y) {
+    if (eatingFood) {
       // Orb collected
       combo = comboTimer > 0 ? Math.min(combo + 1, combo) : 1; // FIX: remove 9-cap on combo (score still caps at x4)
       combo = Math.min(9, combo); // keep display cap at 9
@@ -740,6 +754,7 @@
   // ─── Event listeners ───────────────────────────────────────────────────────
 
   document.addEventListener('keydown', (event) => {
+    if (event.target instanceof HTMLElement && event.target.closest('button, input, select, textarea, [role="button"], [contenteditable="true"]')) return;
     if (keys[event.key]) { event.preventDefault(); requestDirection(keys[event.key]); }
     if (event.key === ' ' || event.key === 'p' || event.key === 'P') { event.preventDefault(); togglePause(); }
     if (/^[1-4]$/.test(event.key)) { event.preventDefault(); castStoredSpell(Number(event.key) - 1); }
@@ -774,7 +789,7 @@
 
   difficultySetting.addEventListener('change', () => {
     speedScale = validSpeeds.includes(Number(difficultySetting.value)) ? Number(difficultySetting.value) : 1;
-    localStorage.setItem('runebound-speed-scale', String(speedScale));
+    writeStorage('runebound-speed-scale', String(speedScale));
   });
 
   skinSetting.addEventListener('change', () => {
@@ -794,7 +809,7 @@
 
   modeSetting.addEventListener('change', () => {
     endlessMode = modeSetting.value === 'endless';
-    localStorage.setItem('runebound-endless-mode', String(endlessMode));
+    writeStorage('runebound-endless-mode', String(endlessMode));
     $('.field-meta').innerHTML = `24 × 24 GRID <i></i> ${endlessMode ? 'ENDLESS TRAIL' : 'BOUNDARY ACTIVE'}`;
     updateHud();
     announce(endlessMode ? 'Endless Grove enabled — wall cells no longer lethal' : 'Classic boundary enabled');
